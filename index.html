@@ -1371,27 +1371,29 @@ function setActiveTab(id){
    ========================================================================= */
 function renderAndamento(){
   const o = state.obra;
+  const progresso = Number(o.progresso) || 0;
   const circ = 2*Math.PI*82;
-  const offset = circ - (o.progresso/100)*circ;
+  const offset = circ - (progresso/100)*circ;
   const ring = document.getElementById("ring-fill");
   requestAnimationFrame(()=>{ ring.style.strokeDashoffset = offset; });
-  document.getElementById("ring-pct").textContent = o.progresso + "%";
-  document.getElementById("stat-inicio").textContent = o.inicio;
-  document.getElementById("stat-previsao").textContent = o.previsao;
-  document.getElementById("site-photo-img").src = o.fotoRecente;
-  document.getElementById("site-photo-cap").textContent = o.fotoCaption;
-  document.getElementById("site-photo-date").textContent = o.fotoData;
+  document.getElementById("ring-pct").textContent = progresso + "%";
+  document.getElementById("stat-inicio").textContent = o.inicio || "—";
+  document.getElementById("stat-previsao").textContent = o.previsao || "—";
+  document.getElementById("site-photo-img").src = o.fotoRecente || "";
+  document.getElementById("site-photo-cap").textContent = o.fotoCaption || "Sem foto ainda";
+  document.getElementById("site-photo-date").textContent = o.fotoData || "";
 
+  const marcos = Array.isArray(o.marcos) ? o.marcos : [];
   const list = document.getElementById("milestones-list");
-  list.innerHTML = o.marcos.map(m=>`
+  list.innerHTML = marcos.length ? marcos.map(m=>`
     <div class="milestone">
       <div class="m-dot ${m.done?"":"pending"}"></div>
       <div style="flex:1;">
         <div class="m-text">${escapeHtml(m.texto)}</div>
-        <div class="m-date">${m.data}</div>
+        <div class="m-date">${m.data||""}</div>
       </div>
     </div>
-  `).join("");
+  `).join("") : `<div style="font-size:12.5px; color:var(--ink-faint); padding:4px 0;">Nenhum marco cadastrado ainda.</div>`;
 }
 
 /* =========================================================================
