@@ -799,11 +799,30 @@ function renderShell(){
     sideNav.appendChild(s);
   });
 }
+const RENDER_POR_ABA = {
+  andamento: renderAndamentoSafe,
+  diario: ()=>renderDiario(),
+  decisao: ()=>renderDecisoes(),
+  projetos: ()=>renderProjetos(),
+  documentos: ()=>renderDocumentos(),
+  relatorios: ()=>renderRelatorios(),
+  admin: ()=>renderAdmin(),
+};
+function renderAndamentoSafe(){
+  // Reforço específico pro anel de progresso: alguns navegadores não
+  // aplicam a transição de CSS corretamente em elementos que acabaram de
+  // sair de "display:none" — forçar um reflow (lendo offsetHeight) antes
+  // de aplicar o estilo evita a tela ficar "presa" sem mostrar o valor.
+  const view = document.getElementById('view-andamento');
+  void view.offsetHeight;
+  renderAndamento();
+}
 function setActiveTab(id){
   state.activeTab=id;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   renderShell();
+  if(RENDER_POR_ABA[id]) RENDER_POR_ABA[id]();
   window.scrollTo({top:0,behavior:'instant'});
 }
 
@@ -882,12 +901,19 @@ function renderDecisoes(){
       statusHtml = `<div class="stamp no">AJUSTE SOLICITADO</div><div class="decisao-meta" style="margin-top:8px;">${d.resolvidoPor?escapeHtml(d.resolvidoPor.nome):''} · ${d.resolvidoEm||''}</div>`;
     }
     const fotoHtml = d.fotoUrl ? `<a class="decisao-anexo" href="${d.fotoUrl}" target="_blank" rel="noopener"><img src="${d.fotoUrl}" alt="Foto do pedido"></a>` : '';
+    const impactoHtml = (d.impactoDias||d.impactoValor) ? `<div class="filter-row" style="margin:0 0 10px;">
+      ${d.impactoDias?`<span class="badge tipo">⏱ +${d.impactoDias} dia(s)</span>`:''}
+      ${d.impactoValor?`<span class="badge tipo">💰 ${Number(d.impactoValor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:''}
+    </div>` : '';
+    const anexosHtml = (d.anexos||[]).length ? `<div class="attach-row" style="flex-wrap:wrap;">${d.anexos.map(a=>`<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📎 ${escapeHtml((a.nome||'anexo').length>22?a.nome.slice(0,19)+'...':(a.nome||'anexo'))}</a>`).join('')}</div>` : '';
     return `<div class="card">
       <div class="decisao-top"><span class="badge tipo">${escapeHtml(d.tipo)}</span><span class="badge ${d.status==='pendente'?'pendente':d.status}">${d.status==='pendente'?'Pendente':(d.status==='aprovado'?'Aprovado':'Ajuste solicitado')}</span></div>
       <div class="req-flow"><span class="req-who"><span class="avatar">${initials(d.criadoPor.nome)}</span>${escapeHtml(d.criadoPor.nome)}</span></div>
       <div class="decisao-title">${escapeHtml(d.titulo)}</div>
       <div class="decisao-desc">${escapeHtml(d.descricao)}</div>
       ${fotoHtml}
+      ${impactoHtml}
+      ${anexosHtml}
       <div class="decisao-meta">Solicitado em ${d.solicitadoEm}</div>
       ${statusHtml}
     </div>`;
