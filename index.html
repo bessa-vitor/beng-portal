@@ -359,6 +359,10 @@
       <section class="view" id="view-andamento">
         <div class="view-title">Andamento da obra</div>
         <div class="view-sub">Acompanhe o progresso físico e os últimos registros do canteiro.</div>
+        <div class="card" id="card-descricao-projeto" style="display:none;">
+          <div class="card-title">Sobre o projeto</div>
+          <div class="decisao-desc" id="descricao-projeto-texto" style="margin-top:4px;"></div>
+        </div>
         <div class="grid-2">
           <div class="card">
             <div class="card-title">Progresso físico</div>
@@ -387,6 +391,10 @@
             </div>
           </div>
         </div>
+        <div class="card" id="card-descricao-projeto" style="display:none;margin-top:0;">
+          <div class="card-title">Sobre o projeto</div>
+          <div id="descricao-projeto-texto" style="margin-top:6px;font-size:13px;line-height:1.6;color:var(--ink);"></div>
+        </div>
         <div class="card" style="margin-top:0;">
           <div class="card-title">Etapas da obra</div>
           <div id="milestones-list" style="margin-top:8px;"></div>
@@ -397,11 +405,27 @@
         <div class="view-title">Diário de obra</div>
         <div class="view-sub">Relatórios diários enviados pela equipe de engenharia.</div>
         <div class="grid-3" id="rdo-list"></div>
+        <div class="card" style="margin-top:6px;">
+          <div class="card-title">Fotos anteriores da obra</div>
+          <div class="view-sub" style="margin-bottom:10px;">Todo o histórico de fotos, dos mais recentes aos mais antigos.</div>
+          <div class="grid-3" id="galeria-fotos-list" style="gap:6px;"></div>
+          <button class="btn btn-outline btn-block" id="btn-carregar-mais-fotos" style="margin-top:10px;">Carregar mais fotos</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-definicoes">
+        <div class="view-title">Definições da Obra</div>
+        <div class="view-sub">Pontos que a equipe técnica precisa que você (ou o outro lado) confirme — servem pra todo mundo ficar com a mesma informação.</div>
+        <div class="filter-row">
+          <button class="filter-pill" data-filter-def="todas">Todas</button>
+          <button class="filter-pill" data-filter-def="aguardando">Aguardando você</button>
+        </div>
+        <div class="grid-3" id="definicoes-list"></div>
       </section>
 
       <section class="view" id="view-decisao">
         <div class="view-title">Solicitações</div>
-        <div class="view-sub" id="decisao-sub">Pedidos entre você e a equipe da obra — de ambos os lados.</div>
+        <div class="view-sub" id="decisao-sub">Pedidos de alteração — os que geram aditivo no contrato, feitos por você ou pela equipe.</div>
         <div class="filter-row">
           <button class="filter-pill" data-filter="todas">Todas</button>
           <button class="filter-pill" data-filter="aguardando">Aguardando você</button>
@@ -430,6 +454,12 @@
       <section class="view" id="view-documentos">
         <div class="view-title">Documentos</div>
         <div class="view-sub">Documentos administrativos da obra.</div>
+        <div class="upload-cta" id="upload-cta-doc" style="display:none;">
+          <button class="btn btn-primary" id="btn-open-doc">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Enviar novo documento
+          </button>
+        </div>
         <div id="documentos-list"></div>
       </section>
 
@@ -480,6 +510,10 @@
       <button class="modal-close" data-close="overlay-pin" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-sub" id="pin-sub">Digite seu PIN para confirmar esta ação.</div>
+    <div class="field" id="pin-obs-wrap" style="display:none;">
+      <label for="pin-obs-input">Observação (opcional)</label>
+      <textarea id="pin-obs-input" placeholder="Deixe um comentário sobre sua decisão, se quiser"></textarea>
+    </div>
     <input type="text" id="pin-confirm-input" maxlength="6" style="width:100%;text-align:center;font-size:22px;letter-spacing:.3em;font-weight:800;font-family:var(--font-mono);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);color:var(--ink)" placeholder="••••">
     <div class="pin-error" id="pin-error">PIN incorreto. Tente novamente.</div>
     <button class="btn btn-primary btn-block" id="pin-confirm">Confirmar</button>
@@ -531,6 +565,27 @@
       <input type="file" id="up-file-projeto" accept="application/pdf" class="sr-only">
     </div>
     <button class="btn btn-primary btn-block" id="upload-projeto-confirm">Enviar revisão</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-upload-doc">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Enviar novo documento</div>
+      <button class="modal-close" data-close="overlay-upload-doc" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-sub">Envie um documento administrativo da obra (contrato, alvará, ART, etc.).</div>
+    <div class="field"><label for="up-doc-nome">Nome do documento</label><input type="text" id="up-doc-nome" placeholder="Ex: Alvará de construção"></div>
+    <div class="field">
+      <label>Arquivo</label>
+      <div class="file-drop" id="file-drop-doc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4 7 9M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <div class="fd-text" id="fd-text-doc">Toque para selecionar o arquivo</div>
+        <div class="fd-sub" id="fd-sub-doc">PDF, imagem ou outro documento</div>
+      </div>
+      <input type="file" id="up-file-doc" class="sr-only">
+    </div>
+    <button class="btn btn-primary btn-block" id="upload-doc-confirm">Enviar documento</button>
   </div>
 </div>
 
@@ -602,6 +657,7 @@ const state = {
 const TABS = [
   { id:'andamento', label:'Andamento', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg>' },
   { id:'diario', label:'Diário', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3M8 11h8M8 15h5"/></svg>' },
+  { id:'definicoes', label:'Definições', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
   { id:'decisao', label:'Solicitações', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>' },
   { id:'projetos', label:'Projetos', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></svg>' },
   { id:'documentos', label:'Documentos', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>' },
@@ -731,15 +787,21 @@ function fotosDoDia(tasks, dataIso){
   (tasks||[]).forEach(t=> (t.photos||[]).forEach(ph=>{ if(ph.date===dataIso) out.push(ph); }));
   return out;
 }
+function todasFotosDoProjeto(tasks){
+  const out=[];
+  (tasks||[]).forEach(t=> (t.photos||[]).forEach(ph=> out.push({...ph, taskName:t.name})));
+  out.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  return out;
+}
 
 async function carregarProjeto(){
   const doc = await db.collection('beng_projects').doc(state.obraId).get();
   state.projeto = doc.data();
 }
 
-function unificarSolicitacoes(p, meuTipo){
+function montarDefinicoes(p, meuTipo){
   const decisorLabel = meuTipo==='cliente' ? 'Cliente' : 'Arquiteto';
-  const defs = (p.definicoes||[]).map(d=>({
+  return (p.definicoes||[]).map(d=>({
     id:'def_'+d.id, origemTipo:'definicao', origemId:d.id,
     tipo:'Definição da Obra', titulo:d.descricao, descricao:d.descricao,
     criadoPor:{nome:'Equipe técnica', cargo:'Engenharia BENG'},
@@ -747,9 +809,12 @@ function unificarSolicitacoes(p, meuTipo){
     solicitadoEm: dfmt(d.prazo), status: d.status==='pendente'?'pendente':(d.status==='aprovada'?'aprovado':'rejeitado'),
     resolvidoPor: d.decididoPor ? {nome:d.decididoPor, cargo:''} : null,
     resolvidoEm: d.decididoEm ? new Date(d.decididoEm).toLocaleString('pt-BR') : null,
-    anexos: d.anexos||[], podeAgir: d.status==='pendente' && d.decisor===decisorLabel
+    resultado: d.resultado||'',
+    anexos: d.anexos||[], podeAgir: d.status==='pendente' && d.decisor===decisorLabel, resultado: d.resultado||''
   }));
-  const adis = (p.solicitacoesCliente||[]).map(s=>({
+}
+function montarSolicitacoes(p, meuTipo){
+  return (p.solicitacoesCliente||[]).map(s=>({
     id:'adi_'+s.id, origemTipo:'aditivo', origemId:s.id,
     tipo:'Pedido de Alteração', titulo:s.local||s.descricao, descricao:s.descricao,
     criadoPor:{nome: s.origem==='cliente' ? (state.contato?state.contato.nome:'Cliente') : 'Equipe técnica', cargo: s.origem==='cliente'?'Cliente':'Engenharia BENG'},
@@ -757,11 +822,11 @@ function unificarSolicitacoes(p, meuTipo){
     solicitadoEm: dfmt(s.data), status: s.status==='orcado'?'pendente':(s.status==='aprovado'||s.status==='executando'||s.status==='concluido'?'aprovado':(s.status==='recusado'?'rejeitado':'analise')),
     resolvidoPor: s.decididoPor ? {nome:s.decididoPor, cargo:''} : null,
     resolvidoEm: s.decididoEm ? new Date(s.decididoEm).toLocaleString('pt-BR') : null,
+    resultado: s.resultado||'',
     fotoUrl: s.fotoUrl, anexos: s.anexos||[],
     podeAgir: s.status==='orcado' && meuTipo==='cliente',
-    impactoDias: s.impactoDias, impactoValor: s.impactoValor
-  }));
-  return [...defs, ...adis].filter(x=>x.status!=='analise' || x.criadoPor.nome===(state.contato?state.contato.nome:''));
+    impactoDias: s.impactoDias, impactoValor: s.impactoValor, resultado: s.resultado||''
+  })).filter(x=>x.status!=='analise' || x.criadoPor.nome===(state.contato?state.contato.nome:''));
 }
 
 /* =========================================================================
@@ -780,13 +845,14 @@ function renderShell(){
   document.getElementById('side-user-name').textContent = c.nome;
   document.getElementById('side-user-role').textContent = state.tipo==='cliente' ? 'Cliente' : 'Arquiteto';
 
-  const hasPending = state.solicitacoesUnificadas.some(d=>d.podeAgir);
+  const hasPendingDef = state.solicitacoesUnificadas.some(d=>d.podeAgir && d.origemTipo==='definicao');
+  const hasPendingAdi = state.solicitacoesUnificadas.some(d=>d.podeAgir && d.origemTipo==='aditivo');
   const bottomNav = document.getElementById('bottom-nav');
   const sideNav = document.getElementById('side-nav');
   bottomNav.innerHTML=''; sideNav.innerHTML='';
   TABS.filter(tab=>!tab.apenasArquiteto || state.tipo==='arquiteto').forEach(tab=>{
     const isActive = state.activeTab===tab.id;
-    const showDot = tab.id==='decisao' && hasPending;
+    const showDot = (tab.id==='definicoes' && hasPendingDef) || (tab.id==='decisao' && hasPendingAdi);
     const b=document.createElement('button');
     b.className='tab-btn'+(isActive?' active':'');
     b.innerHTML=`${tab.icon}<span>${tab.label}</span><span class="dot ${showDot?'show':''}"></span>`;
@@ -802,6 +868,7 @@ function renderShell(){
 const RENDER_POR_ABA = {
   andamento: renderAndamentoSafe,
   diario: ()=>renderDiario(),
+  definicoes: ()=>renderDefinicoesTab(),
   decisao: ()=>renderDecisoes(),
   projetos: ()=>renderProjetos(),
   documentos: ()=>renderDocumentos(),
@@ -831,6 +898,12 @@ function setActiveTab(id){
    ========================================================================= */
 function renderAndamento(){
   const p = state.projeto;
+  if(p.descricaoProjeto && p.descricaoProjeto.trim()){
+    document.getElementById('card-descricao-projeto').style.display = 'block';
+    document.getElementById('descricao-projeto-texto').textContent = p.descricaoProjeto;
+  }else{
+    document.getElementById('card-descricao-projeto').style.display = 'none';
+  }
   const pct = calcularProgresso(p);
   const circ = 2*Math.PI*82;
   const ring = document.getElementById('ring-fill');
@@ -876,62 +949,98 @@ function renderDiario(){
   wrap.querySelectorAll('[data-rdo-data]').forEach(btn=>{
     btn.addEventListener('click', ()=> openPinModal({ type:'rdo', dataIso: btn.getAttribute('data-rdo-data'), title:'Dar ciente no RDO', sub:'Ao confirmar, você assina eletronicamente que tomou ciência deste relatório diário de obra.' }));
   });
+  renderGaleriaFotos(true);
 }
+
+const GALERIA_FOTOS_POR_PAGINA = 12;
+function renderGaleriaFotos(reiniciar){
+  if(reiniciar) state.galeriaFotosQtd = GALERIA_FOTOS_POR_PAGINA;
+  const todas = todasFotosDoProjeto(state.projeto.tasks);
+  const wrap = document.getElementById('galeria-fotos-list');
+  const btnMais = document.getElementById('btn-carregar-mais-fotos');
+  if(!todas.length){ wrap.innerHTML = emptyState('Sem fotos ainda','As fotos enviadas pela equipe aparecerão aqui.'); btnMais.style.display='none'; return; }
+  const visiveis = todas.slice(0, state.galeriaFotosQtd||GALERIA_FOTOS_POR_PAGINA);
+  wrap.innerHTML = visiveis.map(f=>`<a href="${f.url}" target="_blank" rel="noopener" style="display:block;"><img src="${f.thumbUrl||f.url}" alt="${escapeHtml(f.taskName||'Foto da obra')}" loading="lazy" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;"></a>`).join('');
+  btnMais.style.display = visiveis.length < todas.length ? 'block' : 'none';
+}
+document.getElementById('btn-carregar-mais-fotos').addEventListener('click', ()=>{
+  state.galeriaFotosQtd = (state.galeriaFotosQtd||GALERIA_FOTOS_POR_PAGINA) + GALERIA_FOTOS_POR_PAGINA;
+  renderGaleriaFotos(false);
+});
 
 /* =========================================================================
    RENDER — SOLICITAÇÕES
    ========================================================================= */
-function renderDecisoes(){
-  state.solicitacoesUnificadas = unificarSolicitacoes(state.projeto, state.tipo);
-  document.querySelectorAll('.filter-pill').forEach(pl=>pl.classList.toggle('active', pl.getAttribute('data-filter')===state.filtroSolicitacoes));
-  let list = state.solicitacoesUnificadas;
-  if(state.filtroSolicitacoes==='aguardando') list = list.filter(d=>d.podeAgir);
-  else if(state.filtroSolicitacoes==='enviadas') list = list.filter(d=>d.criadoPor.nome===state.contato.nome);
-  const wrap = document.getElementById('decisoes-list');
-  if(!list.length){ wrap.innerHTML = emptyState('Nada por aqui','Nenhuma solicitação encontrada para este filtro.'); return; }
-  wrap.innerHTML = list.map(d=>{
-    let statusHtml;
-    if(d.status==='pendente'){
-      statusHtml = d.podeAgir
-        ? `<div class="decisao-actions"><button class="btn btn-primary btn-sm" data-dec-id="${d.id}" data-dec-acao="aprovar">Aprovar</button><button class="btn btn-ghost-red btn-sm" data-dec-id="${d.id}" data-dec-acao="rejeitar">Solicitar ajuste</button></div>`
-        : `<div class="decisao-waiting">Aguardando resposta</div>`;
-    }else if(d.status==='aprovado'){
-      statusHtml = `<div class="stamp ok">APROVADO</div><div class="decisao-meta" style="margin-top:8px;">${d.resolvidoPor?escapeHtml(d.resolvidoPor.nome):''} · ${d.resolvidoEm||''}</div>`;
-    }else{
-      statusHtml = `<div class="stamp no">AJUSTE SOLICITADO</div><div class="decisao-meta" style="margin-top:8px;">${d.resolvidoPor?escapeHtml(d.resolvidoPor.nome):''} · ${d.resolvidoEm||''}</div>`;
-    }
-    const fotoHtml = d.fotoUrl ? `<a class="decisao-anexo" href="${d.fotoUrl}" target="_blank" rel="noopener"><img src="${d.fotoUrl}" alt="Foto do pedido"></a>` : '';
-    const impactoHtml = (d.impactoDias||d.impactoValor) ? `<div class="filter-row" style="margin:0 0 10px;">
-      ${d.impactoDias?`<span class="badge tipo">⏱ +${d.impactoDias} dia(s)</span>`:''}
-      ${d.impactoValor?`<span class="badge tipo">💰 ${Number(d.impactoValor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:''}
-    </div>` : '';
-    const anexosHtml = (d.anexos||[]).length ? `<div class="attach-row" style="flex-wrap:wrap;">${d.anexos.map(a=>`<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📎 ${escapeHtml((a.nome||'anexo').length>22?a.nome.slice(0,19)+'...':(a.nome||'anexo'))}</a>`).join('')}</div>` : '';
-    return `<div class="card">
-      <div class="decisao-top"><span class="badge tipo">${escapeHtml(d.tipo)}</span><span class="badge ${d.status==='pendente'?'pendente':d.status}">${d.status==='pendente'?'Pendente':(d.status==='aprovado'?'Aprovado':'Ajuste solicitado')}</span></div>
-      <div class="req-flow"><span class="req-who"><span class="avatar">${initials(d.criadoPor.nome)}</span>${escapeHtml(d.criadoPor.nome)}</span></div>
-      <div class="decisao-title">${escapeHtml(d.titulo)}</div>
-      <div class="decisao-desc">${escapeHtml(d.descricao)}</div>
-      ${fotoHtml}
-      ${impactoHtml}
-      ${anexosHtml}
-      <div class="decisao-meta">Solicitado em ${d.solicitadoEm}</div>
-      ${statusHtml}
-    </div>`;
-  }).join('');
+function cardHtmlSolicitacao(d){
+  let statusHtml;
+  if(d.status==='pendente'){
+    statusHtml = d.podeAgir
+      ? `<div class="decisao-actions"><button class="btn btn-primary btn-sm" data-dec-id="${d.id}" data-dec-acao="aprovar">Aprovar</button><button class="btn btn-ghost-red btn-sm" data-dec-id="${d.id}" data-dec-acao="rejeitar">Solicitar ajuste</button></div>`
+      : `<div class="decisao-waiting">Aguardando resposta</div>`;
+  }else if(d.status==='aprovado'){
+    statusHtml = `<div class="stamp ok">APROVADO</div><div class="decisao-meta" style="margin-top:8px;">${d.resolvidoPor?escapeHtml(d.resolvidoPor.nome):''} · ${d.resolvidoEm||''}</div>${d.resultado?`<div class="decisao-desc" style="margin-top:6px;font-style:italic;">"${escapeHtml(d.resultado)}"</div>`:''}`;
+  }else{
+    statusHtml = `<div class="stamp no">AJUSTE SOLICITADO</div><div class="decisao-meta" style="margin-top:8px;">${d.resolvidoPor?escapeHtml(d.resolvidoPor.nome):''} · ${d.resolvidoEm||''}</div>${d.resultado?`<div class="decisao-desc" style="margin-top:6px;font-style:italic;">"${escapeHtml(d.resultado)}"</div>`:''}`;
+  }
+  const fotoHtml = d.fotoUrl ? `<a class="decisao-anexo" href="${d.fotoUrl}" target="_blank" rel="noopener"><img src="${d.fotoUrl}" alt="Foto do pedido"></a>` : '';
+  const impactoHtml = (d.impactoDias||d.impactoValor) ? `<div class="filter-row" style="margin:0 0 10px;">
+    ${d.impactoDias?`<span class="badge tipo">⏱ +${d.impactoDias} dia(s)</span>`:''}
+    ${d.impactoValor?`<span class="badge tipo">💰 ${Number(d.impactoValor).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:''}
+  </div>` : '';
+  const anexosHtml = (d.anexos||[]).length ? `<div class="attach-row" style="flex-wrap:wrap;">${d.anexos.map(a=>`<a href="${a.url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📎 ${escapeHtml((a.nome||'anexo').length>22?a.nome.slice(0,19)+'...':(a.nome||'anexo'))}</a>`).join('')}</div>` : '';
+  return `<div class="card">
+    <div class="decisao-top"><span class="badge tipo">${escapeHtml(d.tipo)}</span><span class="badge ${d.status==='pendente'?'pendente':d.status}">${d.status==='pendente'?'Pendente':(d.status==='aprovado'?'Aprovado':'Ajuste solicitado')}</span></div>
+    <div class="req-flow"><span class="req-who"><span class="avatar">${initials(d.criadoPor.nome)}</span>${escapeHtml(d.criadoPor.nome)}</span></div>
+    <div class="decisao-title">${escapeHtml(d.titulo)}</div>
+    <div class="decisao-desc">${escapeHtml(d.descricao)}</div>
+    ${fotoHtml}
+    ${impactoHtml}
+    ${anexosHtml}
+    <div class="decisao-meta">Solicitado em ${d.solicitadoEm}</div>
+    ${statusHtml}
+  </div>`;
+}
+function bindCardActions(wrap){
   wrap.querySelectorAll('[data-dec-id]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.getAttribute('data-dec-id');
       const acao = btn.getAttribute('data-dec-acao');
       const d = state.solicitacoesUnificadas.find(x=>x.id===id);
-      openPinModal({ type:'decisao', item:d, acao, title: acao==='aprovar'?'Aprovar solicitação':'Solicitar ajuste', sub:`Confirme com seu PIN para responder: ${d.titulo}` });
+      openPinModal({ type:'decisao', item:d, acao, title: acao==='aprovar'?'Aprovar':'Solicitar ajuste', sub:`Confirme com seu PIN para responder: ${d.titulo}` });
     });
   });
 }
+function renderDecisoes(){
+  state.solicitacoesUnificadas = unificarSolicitacoes(state.projeto, state.tipo);
+  document.querySelectorAll('#view-decisao .filter-pill').forEach(pl=>pl.classList.toggle('active', pl.getAttribute('data-filter')===state.filtroSolicitacoes));
+  let list = state.solicitacoesUnificadas.filter(d=>d.origemTipo==='aditivo');
+  if(state.filtroSolicitacoes==='aguardando') list = list.filter(d=>d.podeAgir);
+  else if(state.filtroSolicitacoes==='enviadas') list = list.filter(d=>d.criadoPor.nome===state.contato.nome);
+  const wrap = document.getElementById('decisoes-list');
+  if(!list.length){ wrap.innerHTML = emptyState('Nada por aqui','Nenhuma solicitação encontrada para este filtro.'); return; }
+  wrap.innerHTML = list.map(cardHtmlSolicitacao).join('');
+  bindCardActions(wrap);
+}
+function renderDefinicoesTab(){
+  state.solicitacoesUnificadas = unificarSolicitacoes(state.projeto, state.tipo);
+  document.querySelectorAll('#view-definicoes .filter-pill').forEach(pl=>pl.classList.toggle('active', pl.getAttribute('data-filter-def')===state.filtroDefinicoes));
+  let list = state.solicitacoesUnificadas.filter(d=>d.origemTipo==='definicao');
+  if(state.filtroDefinicoes==='aguardando') list = list.filter(d=>d.podeAgir);
+  const wrap = document.getElementById('definicoes-list');
+  if(!list.length){ wrap.innerHTML = emptyState('Nada por aqui','Nenhuma definição pendente no momento.'); return; }
+  wrap.innerHTML = list.map(cardHtmlSolicitacao).join('');
+  bindCardActions(wrap);
+}
+state.filtroDefinicoes = 'todas';
+document.querySelectorAll('#view-definicoes .filter-pill').forEach(pl=>{
+  pl.addEventListener('click', ()=>{ state.filtroDefinicoes = pl.getAttribute('data-filter-def'); renderDefinicoesTab(); });
+});
 
 /* =========================================================================
    RENDER — DOCUMENTOS
    ========================================================================= */
 function renderDocumentos(){
+  document.getElementById('upload-cta-doc').style.display = state.tipo==='arquiteto' ? 'flex' : 'none';
   const wrap = document.getElementById('documentos-list');
   const docs = state.projeto.documentosCliente || [];
   if(!docs.length){ wrap.innerHTML = emptyState('Nenhum documento ainda','Documentos enviados pela equipe aparecerão aqui.'); return; }
@@ -1019,6 +1128,50 @@ document.getElementById('upload-projeto-confirm').addEventListener('click', asyn
     showToast('Não foi possível enviar. ['+(err.code||'erro')+']','err');
   }
   btn.disabled=false; btn.textContent='Enviar revisão';
+});
+
+let docArquivoPendente = null;
+document.getElementById('btn-open-doc').addEventListener('click', ()=>{
+  document.getElementById('up-doc-nome').value = '';
+  docArquivoPendente = null;
+  document.getElementById('up-file-doc').value = '';
+  document.getElementById('file-drop-doc').classList.remove('has-file');
+  document.getElementById('fd-text-doc').textContent = 'Toque para selecionar o arquivo';
+  document.getElementById('fd-sub-doc').textContent = 'PDF, imagem ou outro documento';
+  document.getElementById('overlay-upload-doc').classList.add('show');
+});
+document.getElementById('file-drop-doc').addEventListener('click', ()=>document.getElementById('up-file-doc').click());
+document.getElementById('up-file-doc').addEventListener('change', ()=>{
+  const f = document.getElementById('up-file-doc').files[0];
+  if(!f) return;
+  docArquivoPendente = f;
+  document.getElementById('file-drop-doc').classList.add('has-file');
+  document.getElementById('fd-text-doc').textContent = f.name;
+  document.getElementById('fd-sub-doc').textContent = (f.size/1024/1024).toFixed(2)+' MB';
+});
+document.getElementById('upload-doc-confirm').addEventListener('click', async ()=>{
+  const nome = document.getElementById('up-doc-nome').value.trim();
+  if(!nome || !docArquivoPendente){ showToast('Informe o nome e selecione o arquivo.','err'); return; }
+  const btn = document.getElementById('upload-doc-confirm');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try{
+    const storage = firebase.storage();
+    const sufixo = Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    const path = `projects/${state.obraId}/documentos/${sufixo}_${docArquivoPendente.name}`;
+    const ref = storage.ref(path);
+    await ref.put(docArquivoPendente);
+    const url = await ref.getDownloadURL();
+    if(!state.projeto.documentosCliente) state.projeto.documentosCliente = [];
+    state.projeto.documentosCliente.push({id:'doc_'+Date.now().toString(36), nome, data:new Date().toISOString().slice(0,10), url});
+    await salvarCampos(['documentosCliente']);
+    renderDocumentos(); renderRelatorios();
+    document.getElementById('overlay-upload-doc').classList.remove('show');
+    showToast(`Documento "${nome}" enviado.`,'ok');
+  }catch(err){
+    console.error('Portal upload documento error:', err.code, err.message);
+    showToast('Não foi possível enviar. ['+(err.code||'erro')+']','err');
+  }
+  btn.disabled=false; btn.textContent='Enviar documento';
 });
 
 /* =========================================================================
@@ -1114,6 +1267,8 @@ function openPinModal(action){
   document.getElementById('pin-sub').textContent = action.sub;
   document.getElementById('pin-confirm-input').value='';
   document.getElementById('pin-error').classList.remove('show');
+  document.getElementById('pin-obs-wrap').style.display = action.type==='decisao' ? 'block' : 'none';
+  document.getElementById('pin-obs-input').value='';
   overlayPin.classList.add('show');
   setTimeout(()=>document.getElementById('pin-confirm-input').focus(), 200);
 }
@@ -1155,6 +1310,7 @@ async function executarAcaoPendente(){
     if(action.type==='decisao'){
       const item = action.item;
       const aprovado = action.acao==='aprovar';
+      const observacao = document.getElementById('pin-obs-input').value.trim();
       state.projeto.termoContador = (state.projeto.termoContador||0)+1;
       if(item.origemTipo==='definicao'){
         const d = state.projeto.definicoes.find(x=>x.id===item.origemId);
@@ -1162,6 +1318,7 @@ async function executarAcaoPendente(){
         d.decididoPor = state.contato.nome;
         d.decididoEm = Date.now();
         d.numeroTermo = state.projeto.termoContador;
+        if(observacao) d.resultado = observacao;
         await salvarCampos(['definicoes','termoContador']);
       }else{
         const s = state.projeto.solicitacoesCliente.find(x=>x.id===item.origemId);
@@ -1170,6 +1327,7 @@ async function executarAcaoPendente(){
         s.decididoEm = Date.now();
         s.respondidoEm = Date.now();
         s.numeroTermo = state.projeto.termoContador;
+        if(observacao) s.resultado = observacao;
         await salvarCampos(['solicitacoesCliente','termoContador']);
       }
       renderDecisoes(); renderShell(); renderRelatorios();
@@ -1186,7 +1344,7 @@ async function executarAcaoPendente(){
    NOVA SOLICITAÇÃO — grava em solicitacoesCliente, no MESMO formato que o
    Gerencial já usa quando o cliente cria um pedido pelo portal atual.
    ========================================================================= */
-document.querySelectorAll('.filter-pill').forEach(pl=>{
+document.querySelectorAll('#view-decisao .filter-pill').forEach(pl=>{
   pl.addEventListener('click', ()=>{ state.filtroSolicitacoes = pl.getAttribute('data-filter'); renderDecisoes(); });
 });
 const overlaySolicitacao = document.getElementById('overlay-solicitacao');
@@ -1290,6 +1448,7 @@ async function init(){
   renderShell();
   renderAndamento();
   renderDiario();
+  renderDefinicoesTab();
   renderDecisoes();
   renderShell();
   renderProjetos();
