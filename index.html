@@ -691,6 +691,16 @@ async function fazerLogin(){
     state.projeto = projeto;
     state.contato = contato;
     state.tipo = tipo;
+    // O Diário de Obra (RDO) vive numa subcoleção própria, "medicoes", não
+    // mais no documento principal da obra — o Gerencial migrou pra lá pra
+    // não estourar o limite de tamanho do documento conforme o histórico
+    // de RDOs cresce (fotos, mão de obra, etc. de cada dia). Sem buscar
+    // essa subcoleção aqui também, o Diário do Portal aparecia sempre
+    // vazio, mesmo com RDOs reais já lançados e visíveis no Gerencial.
+    const medicoesSnap = await db.collection('beng_projects').doc(state.obraId).collection('medicoes').get();
+    const dailyLogsReais = {};
+    medicoesSnap.forEach(d => { dailyLogsReais[d.id] = d.data(); });
+    state.projeto.dailyLogs = dailyLogsReais;
     if(!contato.pin || contato.codigoConvite===pin){
       // Primeiro acesso (ou reset de código): pede pra pessoa criar o PIN
       // dela mesma antes de entrar — o mesmo mecanismo que já existe no
