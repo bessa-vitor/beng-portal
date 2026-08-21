@@ -828,6 +828,9 @@ function montarSolicitacoes(p, meuTipo){
     impactoDias: s.impactoDias, impactoValor: s.impactoValor, resultado: s.resultado||''
   })).filter(x=>x.status!=='analise' || x.criadoPor.nome===(state.contato?state.contato.nome:''));
 }
+function unificarSolicitacoes(p, meuTipo){
+  return [...montarDefinicoes(p, meuTipo), ...montarSolicitacoes(p, meuTipo)];
+}
 
 /* =========================================================================
    RENDER — SHELL
