@@ -403,7 +403,11 @@
 
       <section class="view" id="view-diario">
         <div class="view-title">Diário de obra</div>
-        <div class="view-sub">Relatórios diários enviados pela equipe de engenharia.</div>
+        <div class="view-sub">Relatórios diários enviados pela equipe de engenharia. Toque num RDO para ver todos os detalhes do dia.</div>
+        <div class="filter-row">
+          <input type="date" id="rdo-filtro-data" style="max-width:170px;border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;font-family:inherit;background:var(--bg);color:var(--ink)">
+          <button class="btn btn-outline btn-sm" id="rdo-filtro-limpar">Limpar filtro</button>
+        </div>
         <div class="grid-3" id="rdo-list"></div>
         <div class="card" style="margin-top:6px;">
           <div class="card-title">Fotos anteriores da obra</div>
@@ -478,26 +482,6 @@
         <div id="audit-documentos"></div>
       </section>
 
-      <section class="view" id="view-admin">
-        <div class="view-title">Administração</div>
-        <div class="view-sub">Dê acesso a clientes, arquitetos e projetistas nesta obra — sem precisar abrir o Firebase.</div>
-        <div class="card">
-          <div class="card-title">Dar acesso a uma pessoa nesta obra</div>
-          <div class="modal-sub" style="margin-top:2px;">A pessoa recebe um código de convite de uso único e cria o PIN dela mesma no primeiro acesso — o mesmo mecanismo já usado no Gerencial, ninguém aqui vê ou define o PIN por ela.</div>
-          <div class="field"><label for="adm-pessoa-nome">Nome</label><input type="text" id="adm-pessoa-nome"></div>
-          <div class="field"><label for="adm-pessoa-tipo">Tipo de acesso</label>
-            <select id="adm-pessoa-tipo"><option value="cliente">Cliente</option><option value="arquiteto">Arquiteto</option></select>
-          </div>
-          <div class="field"><label for="adm-pessoa-tel">Telefone/WhatsApp (opcional)</label><input type="text" id="adm-pessoa-tel"></div>
-          <div class="field"><label for="adm-pessoa-email">E-mail (opcional)</label><input type="email" id="adm-pessoa-email"></div>
-          <button class="btn btn-primary" id="adm-criar-pessoa">Gerar acesso</button>
-          <div class="login-error" id="adm-pessoa-msg" style="text-align:left; margin-top:10px; color:var(--green-ok);"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Pessoas com acesso a esta obra</div>
-          <div id="adm-membros-list" style="margin-top:6px;"></div>
-        </div>
-      </section>
     </main>
     <nav class="bottom-nav" id="bottom-nav"></nav>
   </div>
@@ -589,6 +573,16 @@
   </div>
 </div>
 
+<div class="overlay" id="overlay-rdo-detalhe">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <div class="modal-title" id="rdo-detalhe-titulo">RDO</div>
+      <button class="modal-close" data-close="overlay-rdo-detalhe" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="rdo-detalhe-corpo"></div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 <div id="print-area"></div>
 
@@ -662,7 +656,6 @@ const TABS = [
   { id:'projetos', label:'Projetos', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></svg>' },
   { id:'documentos', label:'Documentos', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>' },
   { id:'relatorios', label:'Relatórios', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 13h6M9 17h4"/></svg>' },
-  { id:'admin', label:'Administração', apenasArquiteto:true, icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>' }
 ];
 
 /* =========================================================================
@@ -863,7 +856,7 @@ function renderShell(){
   const bottomNav = document.getElementById('bottom-nav');
   const sideNav = document.getElementById('side-nav');
   bottomNav.innerHTML=''; sideNav.innerHTML='';
-  TABS.filter(tab=>!tab.apenasArquiteto || state.tipo==='arquiteto').forEach(tab=>{
+  TABS.forEach(tab=>{
     const isActive = state.activeTab===tab.id;
     const showDot = (tab.id==='definicoes' && hasPendingDef) || (tab.id==='decisao' && hasPendingAdi);
     const b=document.createElement('button');
@@ -886,7 +879,6 @@ const RENDER_POR_ABA = {
   projetos: ()=>renderProjetos(),
   documentos: ()=>renderDocumentos(),
   relatorios: ()=>renderRelatorios(),
-  admin: ()=>renderAdmin(),
 };
 function renderAndamentoSafe(){
   // Reforço específico pro anel de progresso: alguns navegadores não
@@ -942,27 +934,79 @@ function renderAndamento(){
 /* =========================================================================
    RENDER — DIÁRIO
    ========================================================================= */
+function fotosCompletasDoDia(p, dataIso){
+  const log = (p.dailyLogs||{})[dataIso] || {};
+  const taskPhotos = fotosDoDia(p.tasks, dataIso);
+  const logPhotos = (log.photos||[]).map(ph=>({...ph, taskName:null}));
+  return [...logPhotos, ...taskPhotos];
+}
 function renderDiario(){
   const p = state.projeto;
-  const datas = Object.keys(p.dailyLogs||{}).sort((a,b)=>b.localeCompare(a));
+  let datas = Object.keys(p.dailyLogs||{}).sort((a,b)=>b.localeCompare(a));
+  const filtro = document.getElementById('rdo-filtro-data').value;
+  if(filtro) datas = datas.filter(d=>d===filtro);
   const wrap = document.getElementById('rdo-list');
-  if(!datas.length){ wrap.innerHTML = emptyState('Nenhum RDO ainda','Os relatórios diários da obra aparecerão aqui.'); return; }
+  if(!datas.length){ wrap.innerHTML = emptyState(filtro?'Nenhum RDO nessa data':'Nenhum RDO ainda', filtro?'Tente limpar o filtro ou escolher outra data.':'Os relatórios diários da obra aparecerão aqui.'); return; }
   wrap.innerHTML = datas.map(dataIso=>{
     const log = p.dailyLogs[dataIso];
-    const fotos = fotosDoDia(p.tasks, dataIso);
+    const fotos = fotosCompletasDoDia(p, dataIso);
     const jaAssinou = log.statusAprovacaoCliente==='aprovado';
     const signedHtml = jaAssinou ? `<div class="signed-list"><div class="signed-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m5 12 5 5 9-9"/></svg><span>${escapeHtml(log.aprovadoPor||'')}</span><span class="who">${log.aprovadoEm?new Date(log.aprovadoEm).toLocaleString('pt-BR'):''}</span></div></div>` : '';
     return `<div class="card rdo-card">
-      <div class="rdo-head"><div><div class="rdo-date">${dfmt(dataIso)}</div><div class="rdo-weather">${escapeHtml(log.weatherMorning||'')}${log.weatherAfternoon?' / '+escapeHtml(log.weatherAfternoon):''}</div></div></div>
-      ${fotos.length?`<div class="rdo-photos">${fotos.slice(0,8).map(f=>`<img src="${f.thumbUrl||f.url}" alt="Registro fotográfico" loading="lazy">`).join('')}</div>`:''}
-      <div class="rdo-body">${escapeHtml(log.ocorrencias || log.notes || 'Sem ocorrências registradas neste dia.')}</div>
-      <div class="rdo-foot">${signedHtml}${(jaAssinou||state.tipo!=='cliente')?'':`<button class="btn btn-outline btn-sm" data-rdo-data="${dataIso}">Dar ciente no RDO</button>`}</div>
+      <div class="rdo-head" data-rdo-abrir="${dataIso}" style="cursor:pointer;"><div><div class="rdo-date">${dfmt(dataIso)}</div><div class="rdo-weather">${escapeHtml(log.weatherMorning||'')}${log.weatherAfternoon?' / '+escapeHtml(log.weatherAfternoon):''}</div></div></div>
+      <div data-rdo-abrir="${dataIso}" style="cursor:pointer;">
+        ${fotos.length?`<div class="rdo-photos">${fotos.slice(0,8).map(f=>`<img src="${f.thumbUrl||f.url}" alt="Registro fotográfico" loading="lazy">`).join('')}</div>`:''}
+        <div class="rdo-body">${escapeHtml(log.ocorrencias || log.notes || 'Sem ocorrências registradas neste dia.')}</div>
+      </div>
+      <div class="rdo-foot">${signedHtml}${(jaAssinou||state.tipo!=='cliente')?'':`<button class="btn btn-outline btn-sm" data-rdo-data="${dataIso}">Dar ciente no RDO</button>`}
+        <button class="btn btn-outline btn-sm" data-rdo-abrir="${dataIso}">Ver detalhes</button>
+      </div>
     </div>`;
   }).join('');
   wrap.querySelectorAll('[data-rdo-data]').forEach(btn=>{
-    btn.addEventListener('click', ()=> openPinModal({ type:'rdo', dataIso: btn.getAttribute('data-rdo-data'), title:'Dar ciente no RDO', sub:'Ao confirmar, você assina eletronicamente que tomou ciência deste relatório diário de obra.' }));
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openPinModal({ type:'rdo', dataIso: btn.getAttribute('data-rdo-data'), title:'Dar ciente no RDO', sub:'Ao confirmar, você assina eletronicamente que tomou ciência deste relatório diário de obra.' }); });
+  });
+  wrap.querySelectorAll('[data-rdo-abrir]').forEach(el=>{
+    el.addEventListener('click', ()=> abrirDetalheRdo(el.getAttribute('data-rdo-abrir')));
   });
   renderGaleriaFotos(true);
+}
+document.getElementById('rdo-filtro-data').addEventListener('change', renderDiario);
+document.getElementById('rdo-filtro-limpar').addEventListener('click', ()=>{ document.getElementById('rdo-filtro-data').value=''; renderDiario(); });
+
+function abrirDetalheRdo(dataIso){
+  const p = state.projeto;
+  const log = p.dailyLogs[dataIso];
+  if(!log) return;
+  const fotos = fotosCompletasDoDia(p, dataIso);
+  const labor = log.labor||[];
+  const totQ = labor.reduce((a,l)=>a+(Number(l.count)||0),0);
+  const laborRows = labor.length ? labor.map(l=>`<tr><td class="p-1.5">${escapeHtml(l.role||'')}${l.empresa?` <span style="color:var(--ink-faint);">(${escapeHtml(l.empresa)})</span>`:''}</td><td class="p-1.5" style="text-align:center;font-weight:700;">${l.count}</td><td class="p-1.5" style="text-align:center;">${(Number(l.count)||0)*8} h</td></tr>`).join('') : `<tr><td colspan="3" class="p-1.5" style="text-align:center;color:var(--ink-faint);font-style:italic;">Sem registros</td></tr>`;
+  const equip = log.equipment||[];
+  const equipRows = equip.length ? equip.map(e=>`<tr><td class="p-1.5">${escapeHtml(e.name||'')}</td><td class="p-1.5" style="text-align:center;font-weight:700;">${e.count}</td></tr>`).join('') : `<tr><td colspan="2" class="p-1.5" style="text-align:center;color:var(--ink-faint);font-style:italic;">Sem registros</td></tr>`;
+  const tableStyle = 'width:100%;font-size:11.5px;border-collapse:collapse;';
+  const thStyle = 'text-align:left;padding:6px;background:var(--bg);font-weight:600;border-bottom:1px solid var(--border);';
+  document.getElementById('rdo-detalhe-titulo').textContent = 'RDO — ' + dfmt(dataIso);
+  document.getElementById('rdo-detalhe-corpo').innerHTML = `
+    <div class="filter-row" style="margin-bottom:12px;">
+      <span class="badge tipo">☀️ Manhã: ${escapeHtml(log.weatherMorning||'—')}</span>
+      <span class="badge tipo">🌤️ Tarde: ${escapeHtml(log.weatherAfternoon||'—')}</span>
+    </div>
+    <div class="card-eyebrow">Mão de obra (total: ${totQ})</div>
+    <table style="${tableStyle}margin-bottom:14px;"><thead><tr><th style="${thStyle}">Função</th><th style="${thStyle}text-align:center;">Qtd</th><th style="${thStyle}text-align:center;">HH/dia</th></tr></thead><tbody>${laborRows}</tbody></table>
+    <div class="card-eyebrow">Equipamentos</div>
+    <table style="${tableStyle}margin-bottom:14px;"><thead><tr><th style="${thStyle}">Equipamento</th><th style="${thStyle}text-align:center;">Qtd</th></tr></thead><tbody>${equipRows}</tbody></table>
+    ${(log.ddsRealizado||log.epiStatus)?`<div class="card-eyebrow">Segurança do trabalho</div>
+    <div class="decisao-desc" style="margin-bottom:14px;">
+      ${log.ddsRealizado?`DDS: ${log.ddsRealizado==='sim'?'✅ Realizado':'❌ Não realizado'}${log.ddsTema?' — '+escapeHtml(log.ddsTema):''}<br>`:''}
+      ${log.epiStatus?`EPI: ${log.epiStatus==='conforme'?'✅ Conforme':'⚠️ Não conforme'}${log.epiObs?' — '+escapeHtml(log.epiObs):''}`:''}
+    </div>`:''}
+    <div class="card-eyebrow">Ocorrências / imprevistos</div>
+    <div class="decisao-desc" style="margin-bottom:14px;">${escapeHtml(log.ocorrencias||'Nenhuma ocorrência registrada neste dia.')}</div>
+    <div class="card-eyebrow">Fotos do dia (${fotos.length})</div>
+    ${fotos.length?`<div class="grid-3" style="gap:6px;margin-top:8px;">${fotos.map(f=>`<a href="${f.url}" target="_blank" rel="noopener"><img src="${f.thumbUrl||f.url}" alt="${escapeHtml(f.taskName||f.caption||'Foto')}" loading="lazy" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;"></a>`).join('')}</div>`:`<p style="font-size:12px;color:var(--ink-faint);font-style:italic;">Nenhuma foto registrada neste dia.</p>`}
+  `;
+  document.getElementById('overlay-rdo-detalhe').classList.add('show');
 }
 
 const GALERIA_FOTOS_POR_PAGINA = 12;
@@ -1187,63 +1231,6 @@ document.getElementById('upload-doc-confirm').addEventListener('click', async ()
   btn.disabled=false; btn.textContent='Enviar documento';
 });
 
-/* =========================================================================
-   ADMINISTRAÇÃO — só "dar acesso" (código de convite, igual ao Gerencial).
-   Não inclui criar obra nem sobrescrever progresso: obra é criada no
-   Gerencial pela equipe, e o progresso é calculado automaticamente a
-   partir das tarefas — deixar alguém digitar um número por cima criaria
-   uma informação errada, desencontrada do cronograma real.
-   ========================================================================= */
-function gerarCodigoConvite(){
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sem 0/O/1/I, evita confusão na leitura
-  let s=''; for(let i=0;i<6;i++) s+=chars[Math.floor(Math.random()*chars.length)];
-  return s;
-}
-function renderAdmin(){
-  if(state.tipo!=='arquiteto') return;
-  const wrap = document.getElementById('adm-membros-list');
-  const clientes = (state.projeto.contatosCliente||[]).map(c=>({...c,tipoLabel:'Cliente'}));
-  const arquitetos = (state.projeto.contatosArquiteto||[]).map(c=>({...c,tipoLabel:'Arquiteto'}));
-  const todos = [...clientes, ...arquitetos];
-  wrap.innerHTML = todos.length ? todos.map(c=>`
-    <div class="audit-row">
-      <div class="audit-icn"></div>
-      <div class="audit-body">
-        <div class="audit-title">${escapeHtml(c.nome)} <span style="color:var(--ink-faint); font-weight:400;">· ${c.tipoLabel}</span></div>
-        <div class="audit-meta">${c.pin ? '🔒 PIN já definido pelo(a) próprio(a)' : `⏳ Aguardando 1º acesso · Código: ${escapeHtml(c.codigoConvite||'—')}`}</div>
-      </div>
-    </div>`).join('') : '<div style="font-size:12.5px; color:var(--ink-faint); padding:4px 0 8px;">Nenhuma pessoa cadastrada ainda.</div>';
-}
-document.getElementById('adm-criar-pessoa').addEventListener('click', async ()=>{
-  const msgEl = document.getElementById('adm-pessoa-msg');
-  msgEl.textContent = '';
-  const nome = document.getElementById('adm-pessoa-nome').value.trim();
-  const tipo = document.getElementById('adm-pessoa-tipo').value;
-  const telefone = document.getElementById('adm-pessoa-tel').value.trim();
-  const email = document.getElementById('adm-pessoa-email').value.trim();
-  if(!nome){ msgEl.style.color='var(--red)'; msgEl.textContent='Informe o nome.'; return; }
-  const btn = document.getElementById('adm-criar-pessoa');
-  btn.disabled = true; btn.textContent = 'Gerando...';
-  try{
-    const campo = tipo==='cliente' ? 'contatosCliente' : 'contatosArquiteto';
-    if(!state.projeto[campo]) state.projeto[campo] = [];
-    const codigo = gerarCodigoConvite();
-    state.projeto[campo].push({ id:(tipo==='cliente'?'contcli_':'contarq_')+Date.now().toString(36), nome, telefone, email, pin:null, codigoConvite:codigo, pinDefinidoEm:null });
-    await salvarCampos([campo]);
-    document.getElementById('adm-pessoa-nome').value='';
-    document.getElementById('adm-pessoa-tel').value='';
-    document.getElementById('adm-pessoa-email').value='';
-    msgEl.style.color='var(--green-ok)';
-    msgEl.textContent = `Acesso criado. Código de convite: ${codigo} — passe pra pessoa usar no primeiro acesso.`;
-    renderAdmin();
-  }catch(err){
-    console.error('Portal criar acesso error:', err.code, err.message);
-    msgEl.style.color='var(--red)';
-    msgEl.textContent = 'Erro ao gerar acesso: '+(err.code||err.message);
-  }
-  btn.disabled=false; btn.textContent='Gerar acesso';
-});
-
 function emptyState(title,sub){ return `<div class="empty" style="grid-column:1/-1;"><div class="e-title">${escapeHtml(title)}</div><div class="e-sub">${escapeHtml(sub)}</div></div>`; }
 
 /* =========================================================================
@@ -1316,7 +1303,18 @@ async function executarAcaoPendente(){
       log.aprovadoPor = state.contato.nome;
       log.aprovadoEm = Date.now();
       log.numeroTermo = state.projeto.termoContador;
-      await salvarCampos(['dailyLogs','termoContador']);
+      // O RDO vive na subcoleção "medicoes", não no documento principal —
+      // por isso a gravação do "ciente" precisa ir direto nesse documento
+      // específico. Gravar só no documento principal (como fazia antes)
+      // ficava "invisível" pro Gerencial, que só lê dessa subcoleção.
+      await db.collection('beng_projects').doc(state.obraId).collection('medicoes').doc(action.dataIso).update({
+        statusAprovacaoCliente: 'aprovado',
+        aprovadoPor: log.aprovadoPor,
+        aprovadoEm: log.aprovadoEm,
+        numeroTermo: log.numeroTermo,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await salvarCampos(['termoContador']);
       renderDiario();
       showToast('Ciente registrado no RDO.', 'ok');
     }
@@ -1467,7 +1465,6 @@ async function init(){
   renderProjetos();
   renderDocumentos();
   renderRelatorios();
-  renderAdmin();
 }
 
 document.getElementById('btn-relatorio-completo').addEventListener('click', ()=>{
